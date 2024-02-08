@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git remote add origin https://github.com/kaps02/nodejs.git"
+    "url": "git remote add origin https://github.com/kaps02/node.git"
   },
   "author": "kapil bhai",
   "license": "ISC"
