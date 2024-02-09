@@ -1,29 +1,53 @@
 const http = require('http');
-
+const fs = require('fs');
 
 const server = http.createServer((req, res) => {
+    const url = req.url;
+    const method = req.method;
 
-const requireUrl = req.url; 
-
-if (requireUrl === '/home'){
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.end(`<h1>welcome to home page!</h1>`);
-} 
-else if (requireUrl === '/about'){
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write("<h1>About Page</h1>");
-    res.end();
-}
-else if (requireUrl === '/node'){
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.end("<h1>Nodejs Page</h1>");
-} 
-else {
-    res.writeHead(404);
-    res.end("Error 404: Not Found!");
-}});
-   
-
-server.listen(4000, () => {
-    console.log('Server is running on port 4000');
+    if (url === '/') {
+        fs.readFile('message.txt', 'utf8', (err, data) => {
+            if (err) {
+                console.error(err);
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('Internal Server Error');
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.write('<html>');
+            res.write('<head><title>Enter Message</title></head>');
+            res.write('<body>');
+            if (data) {
+                res.write('<p>Message: ' + data + '</p>');
+            }
+            res.write('<form action="/message" method="POST"><input type="text" name="message"><button type="submit">Send</button></form>');
+            res.write('</body></html>');
+            res.end();
+        });
+    } else if (url === '/message' && method === 'POST') {
+        const body = [];
+        req.on('data', chunk => {
+            body.push(chunk);
+        });
+        req.on('end', () => {
+            const parsedBody = Buffer.concat(body).toString();
+            const message = parsedBody.split('=')[1];
+            fs.writeFile('message.txt', message, err => {
+                if (err) {
+                    console.error(err);
+                    res.writeHead(500, { 'Content-Type': 'text/plain' });
+                    res.end('Internal Server Error');
+                    return;
+                }
+                res.statusCode = 302;
+                res.setHeader('Location', '/');
+                res.end();
+            });
+        });
+    } else {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('this page is Not define');
+    }
 });
+
+server.listen(3000, () => console.log("Server is running on http://localhost:3000"));
